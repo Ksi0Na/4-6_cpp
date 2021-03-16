@@ -40,7 +40,6 @@ find_package(nlohmann_json CONFIG REQUIRED)
 
 add_library(HEX STATIC
   # enum your files and delete this comment
-        tests/source.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/sources/Definitions.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/sources/JSON.cpp
 )
@@ -51,10 +50,13 @@ add_executable(demo
 
 target_include_directories(HEX PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/third-party/PicoSHA2>"
   "$<INSTALL_INTERFACE:include>"
+  "$<INSTALL_INTERFACE:third-party/PicoSHA2>"
 )
 
-target_link_libraries(demo HEX)
+#target_link_libraries(demo HEX)
+
 
 if(BUILD_TESTS)
   add_executable(tests
@@ -62,7 +64,22 @@ if(BUILD_TESTS)
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/test.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/source.cpp
   )
-  target_link_libraries(tests HEX GTest::gtest_main)
+
+  target_link_libraries(
+          HEX
+          Boost::log_setup
+          Boost::log
+          Boost::thread
+          Boost::filesystem
+          Boost::system
+          nlohmann_json::nlohmann_json
+  )
+  target_link_libraries(
+          tests
+          HEX
+          GTest::gtest_main
+  )
+  #target_link_libraries(tests HEX GTest::gtest_main)
   enable_testing()
   add_test(NAME unit_tests COMMAND tests)
 endif()
