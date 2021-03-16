@@ -29,28 +29,40 @@ string(APPEND CMAKE_CXX_FLAGS " -Wshadow -Wnon-virtual-dtor")
 hunter_add_package(GTest)
 find_package(GTest CONFIG REQUIRED)
 
-add_library(${PROJECT_NAME} STATIC
+hunter_add_package(Boost COMPONENTS filesystem log system thread)
+find_package(Boost CONFIG REQUIRED filesystem log log_setup system thread)
+
+hunter_add_package(Boost COMPONENTS log thread system)
+find_package(Boost CONFIG REQUIRED log thread system)
+
+hunter_add_package(nlohmann_json)
+find_package(nlohmann_json CONFIG REQUIRED)
+
+add_library(HEX STATIC
   # enum your files and delete this comment
-  ${CMAKE_CURRENT_SOURCE_DIR}/sources/source.cpp
+        tests/source.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/sources/Definitions.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/sources/JSON.cpp
 )
 
 add_executable(demo
   ${CMAKE_CURRENT_SOURCE_DIR}/demo/main.cpp
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC
+target_include_directories(HEX PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include>"
 )
 
-target_link_libraries(demo ${PROJECT_NAME})
+target_link_libraries(demo HEX)
 
 if(BUILD_TESTS)
   add_executable(tests
     # TODO: enum your files and delete this comment
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/source.cpp
   )
-  target_link_libraries(tests ${PROJECT_NAME} GTest::gtest_main)
+  target_link_libraries(tests HEX GTest::gtest_main)
   enable_testing()
   add_test(NAME unit_tests COMMAND tests)
 endif()
@@ -60,7 +72,7 @@ if(BUILD_COVERAGE)
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tools/coverage/cmake")
   find_package(codecov)
   string(APPEND CMAKE_CXX_FLAGS " --coverage")
-  add_coverage(${PROJECT_NAME})
+  add_coverage(HEX)
   add_coverage(tests)
   coverage_evaluate()
 endif()
@@ -78,8 +90,8 @@ endif()
 
 include(CPackConfig.cmake)
 
-install(TARGETS ${PROJECT_NAME} demo
-  EXPORT "${PROJECT_NAME}-targets"
+install(TARGETS HEX demo
+  EXPORT "HEX-targets"
   RUNTIME DESTINATION bin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
@@ -88,7 +100,7 @@ install(TARGETS ${PROJECT_NAME} demo
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION include)
 
-install(EXPORT "${PROJECT_NAME}-targets"
-  NAMESPACE "${PROJECT_NAME}::"
+install(EXPORT "HEX-targets"
+  NAMESPACE "HEX::"
   DESTINATION "lib/cmake"
 )
